@@ -29,4 +29,13 @@ class TaskReorder(BaseModel):
 
 class TaskRead(BaseModel):
     id: uuid.UUID
-        
+    title: str
+    description: str | None 
+    status: TaskStatus
+    priority: TaskPriority
+    due_date: datetime | None
+    position: int
+    tags: list[TagRead]
+    created_at: datetime
+    updated_at: datetime
+    model_config = {"from_attributes": True}
