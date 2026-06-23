@@ -28,7 +28,7 @@ async def login_user(db: AsyncSession, email: str, password: str) -> dict:
         raise UnauthorizedException("Incorrect email or password")
     
     return {
-        "access_toked": create_access_token(str(user.id)),
+        "access_token": create_access_token(str(user.id)),
         "refresh_token": create_refresh_token(str(user.id)), 
         "token_type":"bearer",
     }

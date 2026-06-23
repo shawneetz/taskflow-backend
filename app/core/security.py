@@ -1,9 +1,11 @@
 # Password hash, JWT encode/decode
+import bcrypt as _bcrypt
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta, timezone
 from app.config import settings
 
+_bcrypt.__about__ = type('__about__', (), {'__version__': _bcrypt.__version__})()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def hash_password(password: str) -> str:

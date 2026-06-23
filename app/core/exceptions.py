@@ -7,11 +7,11 @@ class NotFoundException(HTTPException):
 
 class ForbiddenException(HTTPException):
     def __init__(self):
-        super(). init(status_code=status.HTTP_403_FORBIDDEN, detail="Access forbidden")
+        super().__init__(status_code=status.HTTP_403_FORBIDDEN, detail="Access forbidden")
 
 class ConflictException(HTTPException):
     def __init__(self, detail:str):
-        super.__init__(status_code=status.HTTP_409_CONFLICT, detail=detail)
+        super().__init__(status_code=status.HTTP_409_CONFLICT, detail=detail)
 
 class UnauthorizedException(HTTPException):
     def __init__(self, detail: str = "Could not validate credentials"):

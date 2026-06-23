@@ -33,9 +33,9 @@ async def reorder_task(db: AsyncSession, data: TaskReorder, user_id: uuid.UUID) 
     if old_status != data.new_status:
         await _renormalize_column(db, user_id, old_status)
 
-    dest_result = await db.execute(select(Task).where(Task.user_id==user_id, Task.status==data.new_status, Task.id==task.id).order_by(Task.position))
+    dest_result = await db.execute(select(Task).where(Task.user_id!=user_id, Task.status==data.new_status, Task.id==task.id).order_by(Task.position))
     dest_tasks = list(dest_result.scalars().all())
-    dest_tasks.insert(Task.position, task)
+    dest_tasks.insert(data.new_position, task)
 
     for i, t in enumerate(dest_tasks): # reassign the id per task
         t.position = i
@@ -83,7 +83,7 @@ async def create_task(db: AsyncSession, user_id: uuid.UUID, data: TaskCreate) ->
     task = Task(
         user_id = user_id,
         title = data.title,
-        descrition = data.description,
+        description = data.description,
         status = data.status,
         priority = data.priority,
         due_date = data.due_date,
@@ -92,7 +92,7 @@ async def create_task(db: AsyncSession, user_id: uuid.UUID, data: TaskCreate) ->
 
     if data.tag_ids:
         tag_result = await db.execute(select(Tag).where(Tag.id.in_(data.tag_ids), Tag.user_id == user_id))
-        task_tags = list(tag_result.scalars().all())
+        task.tags = list(tag_result.scalars().all())
 
     db.add(task)
     await db.flush()
