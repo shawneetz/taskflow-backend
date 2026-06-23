@@ -2,7 +2,7 @@
 
 import uuid
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from app.models.task import TaskStatus, TaskPriority
 from app.schemas.tag import TagRead
 
@@ -38,4 +38,4 @@ class TaskRead(BaseModel):
     tags: list[TagRead]
     created_at: datetime
     updated_at: datetime
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)

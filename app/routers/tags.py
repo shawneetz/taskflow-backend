@@ -10,7 +10,7 @@ from app.services import tag_service
 
 router = APIRouter(prefix="/tags", tags=["tags"])
 
-@router.get("",response_model=list([TagRead]))
+@router.get("", response_model=list[TagRead])
 async def list_tags(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     return await tag_service.get_all_tags(db, current_user.id)
 

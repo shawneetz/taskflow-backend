@@ -2,11 +2,11 @@
 
 import uuid
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 class TagCreate(BaseModel):
     name: str
-    color: str = " #6366f1"
+    color: str = "#6366f1"
 
 class TagUpdate(BaseModel):
     name: str | None = None
@@ -18,4 +18,4 @@ class TagRead(BaseModel):
     color: str
     created_at: datetime
 
-    model_config = {"from_attributes":True}
+    model_config = ConfigDict(from_attributes=True)

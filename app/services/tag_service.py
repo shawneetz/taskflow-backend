@@ -1,9 +1,8 @@
 # Business logic for tag operations
-from multiprocessing import Value
-from unittest import async_case
-import re, uuid
+import re
+import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import AsyncAdaptedQueuePool, result_tuple, select
+from sqlalchemy import select
 from app.models.tag import Tag
 from app.schemas.tag import TagCreate, TagRead, TagUpdate
 from app.core.exceptions import NotFoundException, ConflictException

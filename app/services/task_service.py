@@ -1,13 +1,10 @@
 # Business logic for task operations
-from re import search
-from turtle import position, title
-from unittest import result
 import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from app.models.task import Task, TaskPriority, TaskStatus
-from app.models.tag import Tag, task_tags
+from app.models.tag import Tag
 from app.schemas.task import TaskCreate, TaskRead, TaskReorder
 from app.core.exceptions import NotFoundException
 
@@ -33,7 +30,7 @@ async def reorder_task(db: AsyncSession, data: TaskReorder, user_id: uuid.UUID) 
     if old_status != data.new_status:
         await _renormalize_column(db, user_id, old_status)
 
-    dest_result = await db.execute(select(Task).where(Task.user_id!=user_id, Task.status==data.new_status, Task.id==task.id).order_by(Task.position))
+    dest_result = await db.execute(select(Task).where(Task.user_id==user_id, Task.status==data.new_status, Task.id!=task.id).order_by(Task.position))
     dest_tasks = list(dest_result.scalars().all())
     dest_tasks.insert(data.new_position, task)
 
@@ -41,8 +38,7 @@ async def reorder_task(db: AsyncSession, data: TaskReorder, user_id: uuid.UUID) 
         t.position = i
 
     await db.commit()
-    await db.refresh(task)
-    return task
+    return await get_task_by_id(db, data.task_id, user_id)
 
 # Get all task
 async def get_all_task(
@@ -60,7 +56,7 @@ async def get_all_task(
     if priority:
         task = task.where(Task.priority==priority)
     if tag_id:
-        task = task.where(Task.tag_id==tag_id)
+        task = task.where(Task.tags.any(Tag.id == tag_id))
     if search:
         task = task.where(Task.title.ilike(f"%{search}"))
     task = task.order_by(Task.position)
@@ -98,24 +94,20 @@ async def create_task(db: AsyncSession, user_id: uuid.UUID, data: TaskCreate) ->
     await db.flush()
     await _renormalize_column(db,user_id,data.status) 
     await db.commit()
-    await db.refresh(task)
-    return task
+    return await get_task_by_id(db, task.id, user_id)
 
-# Update task fields
 async def update_task(db: AsyncSession, task_id: uuid.UUID, user_id: uuid.UUID, data) -> Task:
     task = await get_task_by_id(db, task_id, user_id)
     for field, value in data.model_dump(exclude_unset=True).items():
-        if field == "tags_ids":
+        if field == "tag_ids":
             tags_result = await db.execute(select(Tag).where(Tag.id.in_(value), Tag.user_id==user_id))
             task.tags = list(tags_result.scalars().all())
         else:
             setattr(task, field, value)
     
     await db.commit()
-    await db.refresh(task)
-    return task 
+    return await get_task_by_id(db, task_id, user_id)
 
-# Delete task
 async def delete_task(db: AsyncSession, task_id: uuid.UUID, user_id: uuid.UUID) -> None:
     task = await get_task_by_id(db, task_id, user_id)
     await db.delete(task)

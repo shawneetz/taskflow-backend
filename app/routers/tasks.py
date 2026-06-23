@@ -1,6 +1,5 @@
 # Tasks router
 
-from os import statvfs_result
 import uuid
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,7 +7,6 @@ from app.db.session import get_db
 from app.dependencies import get_current_user
 from app.models.user import User
 from app.models.task import TaskStatus, TaskPriority
-from app.schemas import task
 from app.schemas.task import TaskCreate, TaskUpdate, TaskRead, TaskReorder
 from app.services import task_service
 
@@ -16,10 +14,10 @@ router = APIRouter(prefix="/tasks", tags=["tasks"])
 
 @router.get("", response_model=list[TaskRead])
 async def list_tasks(
-    status: TaskStatus | None = Query(),
-    priority: TaskPriority | None = Query(),
-    tag_id: uuid.UUID | None = Query(),
-    search: str | None = Query(),
+    status: TaskStatus | None = Query(default=None),
+    priority: TaskPriority | None = Query(default=None),
+    tag_id: uuid.UUID | None = Query(default=None),
+    search: str | None = Query(default=None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):

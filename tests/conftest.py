@@ -4,7 +4,7 @@ import pytest
 import pytest_asyncio
 from typing import AsyncGenerator
 from httpx import AsyncClient, ASGITransport
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from app.main import app as fastapi_app   # ← alias to avoid name collision
 from app.db.session import get_db
 from app.db.base import Base
@@ -26,14 +26,23 @@ async def engine():
 
 @pytest_asyncio.fixture
 async def db(engine) -> AsyncGenerator[AsyncSession, None]:
-    factory = async_sessionmaker(engine, expire_on_commit=False)
-    async with factory() as session:
+    async with engine.connect() as connection:
+        transaction = await connection.begin()
+        session = AsyncSession(
+            bind=connection,
+            expire_on_commit=False,
+            join_transaction_mode="create_savepoint",
+        )
         yield session
-        await session.rollback()
+        await session.close()
+        await transaction.rollback()
 
 @pytest_asyncio.fixture
 async def client(db):
-    fastapi_app.dependency_overrides[get_db] = lambda: db   # ← uses alias now
+    async def override_get_db():
+        yield db
+
+    fastapi_app.dependency_overrides[get_db] = override_get_db
     async with AsyncClient(transport=ASGITransport(app=fastapi_app), base_url="http://test") as c:
         yield c
     fastapi_app.dependency_overrides.clear()
