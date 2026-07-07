@@ -1,5 +1,7 @@
 # Fixtures: test DB, test client, test user
 
+import os
+
 import pytest
 import pytest_asyncio
 from typing import AsyncGenerator
@@ -12,7 +14,10 @@ from app.models.user import User
 from app.core.security import hash_password, create_access_token
 import app.models  # noqa — registers all models with Base.metadata
 
-TEST_DB = "postgresql+asyncpg://postgres:Ichika01@localhost:5433/taskflow_test"
+TEST_DB = os.environ.get(
+    "TEST_DATABASE_URL",
+    "postgresql+asyncpg://postgres:password@localhost:5432/taskflow_test",
+)
 
 @pytest_asyncio.fixture(scope="session")
 async def engine():
